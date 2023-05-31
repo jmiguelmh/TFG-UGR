@@ -11,6 +11,7 @@ import 'package:flutter_blue_plus/flutter_blue_plus.dart';
 import 'package:location/location.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:permission_handler/permission_handler.dart';
+import 'package:permission_handler/permission_handler.dart' as ph;
 import 'package:tfg/api/api.dart';
 import 'package:tfg/survey.dart';
 
@@ -68,16 +69,36 @@ class _MyHomePageState extends State<MyHomePage> {
   @override
   void initState() {
     super.initState();
-    initConnectivity();
-    initActivity();
-    initLocation();
-    initBluetooth();
+    initSensors();
   }
 
   @override
   void dispose() {
     stopSampling();
     super.dispose();
+  }
+
+  void initSensors() async {
+    await requestPermissions();
+    initConnectivity();
+    initActivity();
+    initLocation();
+    initBluetooth();
+  }
+
+  Future<void> requestPermissions() async {
+    // Resquest permissions for activity recognition
+    if (await Permission.activityRecognition.request().isGranted)
+      dev.log("Activity Recognition Permission Granted");
+
+    // Request permissions for locationAlways
+    if (await Permission.location.request().isGranted)
+      if (await Permission.locationAlways.request().isGranted)
+        dev.log("Location Permission Granted");
+
+    // Request permissions for bluetoothScan
+    if (await Permission.bluetoothScan.request().isGranted)
+      dev.log("Bluetooth Scan Permission Granted");
   }
 
   // connectivity_plus
@@ -127,6 +148,7 @@ class _MyHomePageState extends State<MyHomePage> {
       }
 
       // Subscribe to the activity stream.
+      dev.log("Activity Recognition Subscription Start");
       _activityStreamSubscription = activityRecognition.activityStream
           .handleError(_handleError)
           .listen(_onActivityReceive);
@@ -146,49 +168,48 @@ class _MyHomePageState extends State<MyHomePage> {
 
   // location
   Future<void> initLocation() async {
-    if (await Permission.location.request().isGranted) {
-      bool serviceEnabled = await _location.serviceEnabled();
+    bool serviceEnabled = await _location.serviceEnabled();
+    if (!serviceEnabled) {
+      serviceEnabled = await _location.requestService();
+
       if (!serviceEnabled) {
-        serviceEnabled = await _location.requestService();
-
-        if (!serviceEnabled) {
-          dev.log("Location service could not be enabled");
-          return;
-        }
+        dev.log("Location service could not be enabled");
+        return;
       }
-
-      try {
-        await _location.enableBackgroundMode(enable: true);
-      } catch(error) {
-        dev.log("Location background mode could not be enabled");
-      }
-
-      _locationSubscription = _location.onLocationChanged.listen((LocationData location) {
-        setState(() {
-          _locationData = location;
-          dev.log(location.toString());
-        });
-      });
     }
+
+    try {
+      await _location.enableBackgroundMode(enable: true);
+    } catch(error) {
+      dev.log("Location background mode could not be enabled");
+    }
+
+    dev.log("Location Subscription Start");
+    _locationSubscription = _location.onLocationChanged.listen((LocationData location) {
+      setState(() {
+        _locationData = location;
+        dev.log(location.toString());
+      });
+    });
   }
 
   // flutter_blue_plus
   Future<void> initBluetooth() async {
-    if (await Permission.bluetooth.request().isGranted) {
-      flutterBlue.connectedDevices
-          .asStream()
-          .listen((List<BluetoothDevice> devices) {
-        for (BluetoothDevice device in devices) {
-          _addDeviceTolist(device);
-        }
-      });
-      flutterBlue.scanResults.listen((List<ScanResult> results) {
-        for (ScanResult result in results) {
-          _addDeviceTolist(result.device);
-        }
-      });
-      flutterBlue.startScan();
-    }
+    flutterBlue.connectedDevices
+        .asStream()
+        .listen((List<BluetoothDevice> devices) {
+      for (BluetoothDevice device in devices) {
+        _addDeviceTolist(device);
+      }
+    });
+    flutterBlue.scanResults.listen((List<ScanResult> results) {
+      for (ScanResult result in results) {
+        _addDeviceTolist(result.device);
+      }
+    });
+
+    dev.log("Bluetooth Start Scan");
+    flutterBlue.startScan();
   }
 
   _addDeviceTolist(final BluetoothDevice device) {
