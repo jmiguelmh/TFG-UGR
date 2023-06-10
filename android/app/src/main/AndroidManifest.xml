@@ -1,16 +1,18 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
-    package="com.example.tfg">
+    package="com.postcovidai.tfg">
+
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
+    <uses-permission android:name="android.permission.ACCESS_BACKGROUND_LOCATION"/>
+    <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
 
     <uses-permission android:name="android.permission.WAKE_LOCK" />
     <uses-permission android:name="android.permission.ACTIVITY_RECOGNITION" />
     <uses-permission android:name="com.google.android.gms.permission.ACTIVITY_RECOGNITION" />
 
-    <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
-    <uses-permission android:name="android.permission.ACCESS_BACKGROUND_LOCATION"/>
-
     <uses-permission android:name="android.permission.BLUETOOTH" />
     <uses-permission android:name="android.permission.BLUETOOTH_ADMIN" />
     <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION"/>
+    <uses-permission android:name="android.permission.BLUETOOTH_SCAN" />
 
     <application
         android:label="tfg"
@@ -42,13 +44,5 @@
         <meta-data
             android:name="flutterEmbedding"
             android:value="2" />
-
-       <receiver android:name="dk.cachet.activity_recognition_flutter.ActivityRecognizedBroadcastReceiver"/>
-       <service
-           android:name="dk.cachet.activity_recognition_flutter.ActivityRecognizedService"
-           android:permission="android.permission.BIND_JOB_SERVICE"
-           android:exported="true"/>
-       <service android:name="dk.cachet.activity_recognition_flutter.ForegroundService" />
-
     </application>
 </manifest>

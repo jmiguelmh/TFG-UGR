@@ -2,8 +2,8 @@ import 'dart:convert';
 import 'dart:io';
 
 import 'package:http_parser/http_parser.dart';
-import 'package:tfg/api/credentials.dart';
-import 'package:tfg/api/http.dart';
+import 'package:pruebas/web_services_api/credentials.dart';
+import 'package:pruebas/web_services_api/http.dart';
 import 'package:http/http.dart' as http;
 
 class Api {
