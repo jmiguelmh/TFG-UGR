@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'dart:convert';
 import 'dart:ui';
+import 'dart:developer' as dev;
 
 import 'package:flutter/material.dart';
 import 'package:flutter_background_service/flutter_background_service.dart';
@@ -37,7 +38,7 @@ class BackgroundService {
     _activitySubscription =
         ar.FlutterActivityRecognition.instance.activityStream.listen((_act) {
       activity = _act;
-      print("Detected activity: ${activity.toJson()}");
+      dev.log("Detected activity: ${activity.toJson()}");
     });
   }
 
@@ -47,7 +48,7 @@ class BackgroundService {
       'MY FOREGROUND SERVICE', // title
       description:
           'This channel is used for important notifications.', // description
-      importance: Importance.low, // importance must be at low or higher level
+      importance: Importance.high, // importance must be at low or higher level
     );
 
     final FlutterLocalNotificationsPlugin flutterLocalNotificationsPlugin =
@@ -82,8 +83,7 @@ class BackgroundService {
   }
 
   Future<void> stopService() async {
-    print("Stop service");
-    print(await service.isRunning());
+    dev.log("Stop service");
     if (await service.isRunning()) {
       service.invoke("stopService");
     }
@@ -153,20 +153,12 @@ Future<void> _sampleSensors(ServiceInstance service, BackgroundService backgroun
 // Sensors
 // Location
   Position? position;
-  position = await Geolocator.getCurrentPosition(
-      desiredAccuracy: LocationAccuracy.high);
-  print("${position.latitude}º, ${position.longitude}º");
+  position = await Geolocator.getCurrentPosition(desiredAccuracy: LocationAccuracy.high);
 
 // Connectivity
   Connectivity connectivity = Connectivity();
   ConnectivityResult connectivityResult =
   await connectivity.checkConnectivity();
-  print("Connectivity: $connectivityResult");
-
-// Activity Recognition
-
-  print(
-      "Activity: ${backgroundService.activity.type} (${backgroundService.activity.confidence})");
 
 // Bluetooth
   final FlutterBluePlus flutterBlue = FlutterBluePlus.instance;
@@ -180,15 +172,18 @@ Future<void> _sampleSensors(ServiceInstance service, BackgroundService backgroun
     }
   });
 
-  print("Bluetooth Start Scan");
   const Duration scanDuration = Duration(seconds: 10);
   flutterBlue.startScan(scanMode: ScanMode.lowPower, timeout: scanDuration);
   await Future.delayed(scanDuration);
   flutterBlue.stopScan();
 
-  print("Bluetooth: ${devicesList.length}");
+    // Sensor logs
+  dev.log("Connectivity: $connectivityResult");
+  dev.log("Activity: ${backgroundService.activity.type} (${backgroundService.activity.confidence})");
+  dev.log("${position.latitude}º, ${position.longitude}º");
+  dev.log("Bluetooth: ${devicesList.length}");
   for (BluetoothDevice device in devicesList) {
-    print(device);
+    dev.log(device.toString());
   }
 
 // REST API
@@ -211,25 +206,25 @@ Future<void> _sampleSensors(ServiceInstance service, BackgroundService backgroun
     }
   };
 
-  print(json.encode(_dataPoint));
+  dev.log(json.encode(_dataPoint));
 
   Api api = Api();
 
-  print("HTTP POST TOKEN");
+  dev.log("HTTP POST TOKEN");
   Map<String, dynamic> jsonPostToken = await api.postToken(
       numAttemps: 5, timeoutDuration: const Duration(seconds: 5));
 
-  print("HTTP GET TOKEN");
+  dev.log("HTTP GET TOKEN");
   Map<String, dynamic> jsonGetToken = await api.getToken(
       jsonPostToken["access_token"],
       numAttemps: 5,
       timeoutDuration: const Duration(seconds: 5));
 
-  print("HTTP POST DATAPOINT");
+  dev.log("HTTP POST DATAPOINT");
   Map<String, dynamic> jsonPostDatapoint = await api.postDataPoint(
       jsonPostToken["access_token"], json.encode(_dataPoint),
       numAttemps: 5, timeoutDuration: const Duration(seconds: 5));
-  print(jsonPostDatapoint);
+  dev.log(jsonPostDatapoint.toString());
 }
 
 Future<void> _sendSurveyNotification(FlutterLocalNotificationsPlugin flutterLocalNotificationsPlugin) async {

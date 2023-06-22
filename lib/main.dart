@@ -57,57 +57,113 @@ class _MyHomePageState extends State<MyHomePage> {
     }
 
     return Scaffold(
-      appBar: AppBar(
-        title: Text('Home'),
-      ),
-      body: Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-          children: [
-            ElevatedButton(
-              child: Text((!samplingSensors) ? "Start sampling" : "Stop sampling"),
-              onPressed: () async {
-                bool locationPermission = false;
-                bool activityRecognitionPermission = false;
-                bool bluetoothScanPermission = false;
-
-                // Request permission for location
-                if(await Permission.location.request().isGranted)
-                  if(await Permission.locationAlways.request().isGranted) {
-                    print("LocationAlways permission granted");
-                    locationPermission = true;
-                  }
-
-                // Request permission for activity recognition
-                if(await Permission.activityRecognition.request().isGranted) {
-                  print("ActivityRecognition permission granted");
-                  activityRecognitionPermission = true;
-                }
-
-                // Request permission for bluetooth scanning
-                if (await Permission.bluetoothScan.request().isGranted) {
-                  print("BluetoothScan permission granted");
-                  bluetoothScanPermission = true;
-                }
-
-                if (locationPermission && activityRecognitionPermission && bluetoothScanPermission) {
-                  setState(() {
-                    samplingSensors = !samplingSensors;
-                  });
-
-                  await preferences.setBool('samplingSensors', samplingSensors);
-
-                  if (samplingSensors) {
-                    backgroundService.initializeService();
-                  } else {
-                    backgroundService.initializeService();
-                    backgroundService.stopService();
-                  }
-                }
-              },
+      body: Column(
+        children: [
+          Container(
+            height: MediaQuery.of(context).size.height * 0.3,
+            child: Row(
+              children: [
+                Container(
+                  width: MediaQuery.of(context).size.width * 0.25,
+                  child: Image.asset(
+                      'assets/images/POSTCOVID-AI-logo.png',
+                  ),
+                ),
+                Container(
+                  width: MediaQuery.of(context).size.width * 0.75,
+                  child: FittedBox(
+                    fit: BoxFit.fitWidth,
+                    child: Text(
+                      "POSTCOVID-AI",
+                      style: TextStyle(
+                        fontWeight: FontWeight.bold,
+                        color: Color(0xff5f868f)
+                      ),
+                    ),
+                  ),
+                )
+              ],
             ),
-          ],
-        ),
+          ),
+          Container(
+            height: MediaQuery.of(context).size.height * 0.7,
+            child: Column(
+              children: [
+                Container(
+                  margin: EdgeInsets.fromLTRB(0, 0, 0, 50),
+                  child: (!samplingSensors) ?
+                  Text(
+                    "Sampling service is inactive",
+                    style: TextStyle(
+                        fontWeight: FontWeight.bold,
+                        fontSize: 20,
+                        color: Colors.red
+                    ),
+                  ) :
+                  Text(
+                    "Sampling service is active",
+                    style: TextStyle(
+                        fontWeight: FontWeight.bold,
+                        fontSize: 20,
+                        color: Colors.green
+                    ),
+                  ),
+                ),
+
+                ElevatedButton(
+                  style: ButtonStyle(
+                    backgroundColor: MaterialStateProperty.all<Color>(Color(0xff5f868f)),
+                    shape: MaterialStateProperty.all<RoundedRectangleBorder>(
+                        RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(18.0),
+                        )
+                    )
+                  ),
+                  child: Text((!samplingSensors) ? "Start sampling" : "Stop sampling"),
+                  onPressed: () async {
+                    bool locationPermission = false;
+                    bool activityRecognitionPermission = false;
+                    bool bluetoothScanPermission = false;
+
+                    // Request permission for location
+                    if(await Permission.location.request().isGranted)
+                      if(await Permission.locationAlways.request().isGranted) {
+                        print("LocationAlways permission granted");
+                        locationPermission = true;
+                      }
+
+                    // Request permission for activity recognition
+                    if(await Permission.activityRecognition.request().isGranted) {
+                      print("ActivityRecognition permission granted");
+                      activityRecognitionPermission = true;
+                    }
+
+                    // Request permission for bluetooth scanning
+                    if (await Permission.bluetoothScan.request().isGranted) {
+                      print("BluetoothScan permission granted");
+                      bluetoothScanPermission = true;
+                    }
+
+                    if (locationPermission && activityRecognitionPermission && bluetoothScanPermission) {
+                      setState(() {
+                        samplingSensors = !samplingSensors;
+                      });
+
+                      await preferences.setBool('samplingSensors', samplingSensors);
+
+                      if (samplingSensors) {
+                        backgroundService.initializeService();
+                      } else {
+                        backgroundService.initializeService();
+                        backgroundService.stopService();
+                      }
+                    }
+                  },
+                ),
+              ],
+            ),
+          ),
+        ],
       ),
     );
   }
